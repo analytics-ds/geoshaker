@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GEOshaker
 
-## Getting Started
+> Audit GEO express pour savoir si ton site est pret pour les IA. Score de 0 a 100, detail par etape. Un outil Datashake.
 
-First, run the development server:
+GEOshaker fait un audit technique automatise en 10 secondes pour evaluer la capacite d'un site a etre correctement crawle, compris et cite par les moteurs IA (ChatGPT Search, Claude, Perplexity, Gemini, Google AI Overviews).
+
+## Demo
+
+Lance le serveur local puis ouvre `http://localhost:3000` sur ton mobile ou desktop.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Ce que GEOshaker controle
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+7 etapes, 29 points de controle, ponderes par priorite (BLOQUANT, HAUTE, MOYENNE).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Robots.txt** : GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Disallow global
+2. **Rendu sans JavaScript** : contenu visible dans le HTML source (homepage, produit, a propos, blog)
+3. **JSON-LD** : presence dans le HTML source, pas seulement via GTM, validite, types pertinents
+4. **TTFB** : temps de reponse serveur sous 500ms
+5. **/llms.txt** : existence, pertinence, URLs strategiques
+6. **On-page et crawl** : sitemap, H1 unique, meta description, canonical, HTTPS, hierarchie Hn, 300 mots minimum
+7. **Version internationale** : presence d'une version EN et declaration hreflang
 
-## Learn More
+## Ponderation du score
 
-To learn more about Next.js, take a look at the following resources:
+- **BLOQUANT** compte x 3
+- **HAUTE** compte x 2
+- **MOYENNE** compte x 1
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Un check `warn` donne la moitie du poids, un check `skip` est exclu du denominateur. Le resultat est normalise en entier 0 a 100 (sans decimale).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Codes couleur du score
 
-## Deploy on Vercel
+- **80 a 100** : vert, GEO-ready
+- **50 a 79** : orange, a ameliorer
+- **0 a 49** : rouge, critique
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Stack technique
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 (app router, Turbopack)
+- React 19
+- TypeScript strict
+- Tailwind CSS 4
+- Route API `/api/check` (Node runtime, jusqu a 30s d execution)
+- Palette Datashake (alignee sur la DA Datafer)
+- Mobile-first, touch-friendly (cibles 48px min), gauge lisible a distance
+
+Zero dependance externe pour l audit : tout repose sur le fetch natif de Node et des regex robustes qui gerent le HTML minifie comme le HTML classique.
+
+## Developpement
+
+```bash
+# Typecheck
+npx tsc --noEmit
+
+# Build production
+npm run build
+
+# Dev server
+npm run dev
+```
+
+## Deploiement
+
+Pense pour Vercel. Lier le repo GitHub a un nouveau projet Vercel, la route API est executee cote serveur Node (requis pour les fetch sortants).
+
+## Creator
+
+Outil gratuit cree par [Datashake](https://datashake.fr), agence SEO a Paris.

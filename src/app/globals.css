@@ -1,26 +1,207 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Palette datashake (extraite du deck GEO Technique) */
+  --bg: #F2EDE4;
+  --bg-warm: #E8E2D5;
+  --bg-card: #FFFFFF;
+  --bg-card-tint: #F7F3EB;
+  --bg-dark: #0A0A0A;
+  --bg-code: #0A0A0A;
+
+  --border: #D4CFC5;
+  --border-strong: #C2BDB4;
+
+  --text: #0A0A0A;
+  --text-secondary: #56524C;
+  --text-muted: #8C887F;
+  --text-inverse: #F2EDE4;
+
+  --accent: #3B4FF0;
+  --accent-hover: #2B3FD0;
+  --accent-soft: #E4E8FF;
+
+  --green: #1F9A5E;
+  --green-bg: #DFF1E7;
+  --orange: #D4890E;
+  --orange-bg: #FBEFD8;
+  --red: #D4382F;
+  --red-bg: #FBE1DE;
+
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-xs: 4px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.04);
+  --shadow: 0 2px 12px rgba(10, 10, 10, 0.05);
+  --shadow-lg: 0 12px 40px rgba(10, 10, 10, 0.08);
+
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg-warm: var(--bg-warm);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-tint: var(--bg-card-tint);
+  --color-bg-dark: var(--bg-dark);
+  --color-bg-code: var(--bg-code);
+
+  --color-border-default: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-brand-green: var(--green);
+  --color-brand-green-bg: var(--green-bg);
+  --color-brand-orange: var(--orange);
+  --color-brand-orange-bg: var(--orange-bg);
+  --color-brand-red: var(--red);
+  --color-brand-red-bg: var(--red-bg);
+
+  --font-display: var(--font-body), system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-body), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* Headings toujours en Inter très bold */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+/* Logo datashake : 2 carres decales */
+.ds-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.ds-logo-mark {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.ds-logo-mark .sq {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--text);
+}
+.ds-logo-mark .sq1 {
+  top: 0;
+  left: 12px;
+}
+.ds-logo-mark .sq2 {
+  top: 10px;
+  left: 0;
+}
+.ds-logo-name {
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.ds-logo-suffix {
+  font-family: var(--font-mono), monospace;
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+/* Petit pattern de pixels dans les coins (deco datashake) */
+.ds-pixels {
+  display: inline-block;
+  position: relative;
+  width: 18px;
+  height: 18px;
+}
+.ds-pixels::before,
+.ds-pixels::after {
+  content: "";
+  position: absolute;
+  background: var(--text);
+}
+.ds-pixels::before {
+  width: 5px;
+  height: 5px;
+  top: 0;
+  left: 9px;
+}
+.ds-pixels::after {
+  width: 5px;
+  height: 5px;
+  top: 7px;
+  left: 0;
+}
+
+/* Dark section */
+.ds-dark {
+  background: var(--bg-dark);
+  color: var(--text-inverse);
+}
+.ds-dark .ds-logo-mark .sq {
+  background: var(--text-inverse);
+}
+.ds-dark .ds-logo-name {
+  color: var(--text-inverse);
+}
+
+/* Labels eyebrow (genre "GEO · TECHNIQUE" en indigo) */
+.ds-eyebrow {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Focus */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
