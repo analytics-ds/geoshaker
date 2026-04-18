@@ -187,8 +187,8 @@ export async function checkRobots(siteUrl: string): Promise<{
     } else if (uaBlocked) {
       // robots.txt autorise mais le pare-feu bloque : le piege classique Cloudflare/WAF
       status = "fail";
-      detail = `${bot} est autorisé dans votre robots.txt, mais votre pare-feu (Cloudflare, Akamai, DataDome…) renvoie ${uaRes.status} quand ${aiName} se présente. Résultat : ${aiName} ne peut pas lire votre site.`;
-      advice = `Dans votre WAF ou CDN, autorisez explicitement l’IP range et l’User-Agent « ${bot} ». Pour Cloudflare, vérifiez les règles Bot Fight Mode et Managed Rules.`;
+      detail = `${bot} est autorisé dans votre robots.txt, mais votre pare-feu (Cloudflare, Akamai, DataDome…) renvoie ${uaRes.status} quand ${aiName} se présente. Une IP différente (résidentielle, OpenAI) passerait peut-être grâce à la « verified bot » list, mais ce test échoue, et le test du site dans un navigateur ne prouve rien (les WAFs font du TLS fingerprinting). Consultez vos logs serveur pour confirmer.`;
+      advice = `Dans votre WAF ou CDN, autorisez explicitement l’IP range ET l’User-Agent de ${bot}. Pour Cloudflare, activez « Verified Bots » et vérifiez que GPTBot, ClaudeBot, PerplexityBot sont whitelistés.`;
     } else if (uaOtherFail) {
       status = "warn";
       detail = `Test d’accès inconclu pour ${bot} (statut ${uaRes.status ?? "erreur réseau"}). robots.txt autorise mais la connexion a échoué.`;

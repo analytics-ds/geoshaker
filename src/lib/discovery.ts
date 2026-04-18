@@ -23,6 +23,7 @@ const ABOUT_PATTERNS = [
   /\/a-propos(\/|$)/i,
   /\/about(\/|$|-us)/i,
   /\/qui-sommes-nous/i,
+  /\/qui-est/i,
   /\/notre-histoire/i,
   /\/notre-marque/i,
   /\/la-marque/i,
@@ -30,6 +31,10 @@ const ABOUT_PATTERNS = [
   /\/l-entreprise/i,
   /\/histoire(\/|$)/i,
   /\/equipe(\/|$)/i,
+  /\/decouvrir/i,
+  /\/notre-societe/i,
+  /\/nos-engagements/i,
+  /\/presentation/i,
 ];
 
 const PRODUCT_PATTERNS = [
@@ -41,23 +46,52 @@ const PRODUCT_PATTERNS = [
   /\/prestations?\//i,
   /\/offres?\//i,
   /\/catalogue\//i,
-  /\/p\//i, // Shopify product pages often live under /products/ mais aussi /p/
+  /\/p\//i,
 ];
+
+// Paths communs a tester en direct (HEAD) si rien n est trouve dans la home
+const ABOUT_FALLBACK_PATHS = [
+  "/qui-sommes-nous/",
+  "/qui-sommes-nous",
+  "/a-propos/",
+  "/a-propos",
+  "/about/",
+  "/about",
+  "/about-us/",
+  "/about-us",
+  "/notre-histoire/",
+  "/la-marque/",
+  "/nos-engagements/",
+  "/decouvrir/",
+];
+const BLOG_FALLBACK_PATHS = ["/blog/", "/blog", "/actualites/", "/actualites", "/news/", "/news", "/magazine/"];
 
 function findByPatterns(urls: string[], patterns: RegExp[]): string | undefined {
   return urls.find((u) => patterns.some((p) => p.test(u)));
 }
 
+async function probeFallbackPath(origin: string, paths: string[]): Promise<string | undefined> {
+  // On teste en parallele mais on retourne le premier 2xx
+  const results = await Promise.all(
+    paths.map(async (p) => {
+      const url = origin + p;
+      const out = await fetchText(url, { timeoutMs: 5000, method: "HEAD" });
+      return { url, ok: out.ok && (out.status ?? 0) < 400 };
+    })
+  );
+  const hit = results.find((r) => r.ok);
+  return hit?.url;
+}
+
 async function discoverFromSitemap(
   origin: string
-): Promise<{ blog?: string; product?: string }> {
+): Promise<{ blog?: string; product?: string; about?: string }> {
   const out = await fetchText(`${origin}/sitemap.xml`, { timeoutMs: 6000 });
   if (!out.ok || !out.body) return {};
   const locRe = /<loc>([^<]+)<\/loc>/gi;
   const urls: string[] = [];
   let m: RegExpExecArray | null;
   while ((m = locRe.exec(out.body)) !== null) urls.push(m[1].trim());
-  // Si c est un sitemap-index, prendre le premier sous-sitemap
   if (/<sitemapindex[\s>]/i.test(out.body) && urls[0]) {
     const subOut = await fetchText(urls[0], { timeoutMs: 6000 });
     if (subOut.ok && subOut.body) {
@@ -73,6 +107,7 @@ async function discoverFromSitemap(
   return {
     blog: findByPatterns(sameOrigin, BLOG_PATTERNS),
     product: findByPatterns(sameOrigin, PRODUCT_PATTERNS),
+    about: findByPatterns(sameOrigin, ABOUT_PATTERNS),
   };
 }
 
@@ -80,18 +115,29 @@ export async function discoverTypedUrls(
   home: string,
   homeOutcome: FetchOutcome
 ): Promise<DiscoveredUrls> {
-  const origin = rootOrigin(home);
+  // On utilise l origine FINALE (apres redirect) pour construire les URLs absolues.
+  // Exemple : amv.fr → www.amv.fr. Les sous-pages sans www peuvent renvoyer 404.
+  const origin = rootOrigin(homeOutcome.url || home);
   const links = homeOutcome.body ? findInternalLinks(homeOutcome.body, origin) : [];
 
   let blog = findByPatterns(links, BLOG_PATTERNS);
   let about = findByPatterns(links, ABOUT_PATTERNS);
   let product = findByPatterns(links, PRODUCT_PATTERNS);
 
-  // Fallback : si le blog ou le produit manquent, on cherche dans le sitemap
-  if (!blog || !product) {
+  // Fallback 1 : sitemap
+  if (!blog || !product || !about) {
     const fromSitemap = await discoverFromSitemap(origin);
     if (!blog) blog = fromSitemap.blog;
     if (!product) product = fromSitemap.product;
+    if (!about) about = fromSitemap.about;
+  }
+
+  // Fallback 2 : paths communs en HEAD (pour sites type AMV qui n ont pas le lien dans la home)
+  if (!about) {
+    about = await probeFallbackPath(origin, ABOUT_FALLBACK_PATHS);
+  }
+  if (!blog) {
+    blog = await probeFallbackPath(origin, BLOG_FALLBACK_PATHS);
   }
 
   return { home, blog, about, product };
