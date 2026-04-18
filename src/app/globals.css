@@ -169,6 +169,22 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
 }
 
+/* Form sizing : mobile = large target, desktop = compact */
+.geoshaker-url-input {
+  height: 72px;
+}
+.geoshaker-url-button {
+  height: 80px;
+}
+@media (min-width: 640px) {
+  .geoshaker-url-input {
+    height: 52px;
+  }
+  .geoshaker-url-button {
+    height: 52px;
+  }
+}
+
 /* Dark section */
 .ds-dark {
   background: var(--bg-dark);
