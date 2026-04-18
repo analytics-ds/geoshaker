@@ -142,13 +142,12 @@ export function AuditApp() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 disabled={loading}
-                className="flex-1 h-12 sm:h-13 px-3.5 rounded-[10px] border-2 border-[color:var(--border-strong)] bg-[color:var(--bg-card)] placeholder:text-[color:var(--text-muted)] focus:border-[color:var(--accent)] focus:outline-none font-medium"
-                style={{ fontSize: "16px" }}
+                className="flex-1 h-[60px] sm:h-13 px-5 sm:px-3.5 rounded-[12px] sm:rounded-[10px] border-2 border-[color:var(--border-strong)] bg-[color:var(--bg-card)] placeholder:text-[color:var(--text-muted)] focus:border-[color:var(--accent)] focus:outline-none font-medium text-[18px] sm:text-[16px]"
               />
               <button
                 type="submit"
                 disabled={loading || !url.trim()}
-                className="h-12 sm:h-13 px-5 rounded-[10px] font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[120px]"
+                className="h-[60px] sm:h-13 px-6 sm:px-5 rounded-[12px] sm:rounded-[10px] font-bold text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[130px] sm:min-w-[120px]"
                 style={{
                   background: loading || !url.trim() ? "var(--bg-warm)" : "var(--text)",
                   color: loading || !url.trim() ? "var(--text-muted)" : "var(--text-inverse)",
