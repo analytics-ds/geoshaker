@@ -170,18 +170,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Form sizing : mobile = large target, desktop = compact */
-.geoshaker-url-input {
-  height: 72px;
+input.geoshaker-url-input {
+  height: 72px !important;
+  min-height: 72px;
 }
-.geoshaker-url-button {
-  height: 80px;
+button.geoshaker-url-button {
+  height: 80px !important;
+  min-height: 80px;
 }
 @media (min-width: 640px) {
-  .geoshaker-url-input {
-    height: 52px;
+  input.geoshaker-url-input {
+    height: 52px !important;
+    min-height: 52px;
   }
-  .geoshaker-url-button {
-    height: 52px;
+  button.geoshaker-url-button {
+    height: 52px !important;
+    min-height: 52px;
   }
 }
 
