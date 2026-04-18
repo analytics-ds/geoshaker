@@ -3,7 +3,7 @@ import { Logo } from "@/components/logo";
 
 export const dynamic = "force-dynamic";
 
-const PUBLIC_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://geoshaker.fr";
+const PUBLIC_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://geoshaker.vercel.app";
 
 export default async function QrPage() {
   const dataUrl = await QRCode.toString(PUBLIC_URL, {
