@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GEOshaker — Votre site est-il prêt pour les moteurs génératifs ?",
+  title: "GEOshaker. Votre site est-il prêt pour les moteurs génératifs ?",
   description:
     "Audit GEO express. Score de 0 à 100 pour savoir si votre site est lisible par ChatGPT, Claude, Perplexity et Gemini. Un outil datashake.",
   applicationName: "GEOshaker",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   publisher: "datashake",
   robots: { index: true, follow: true },
   openGraph: {
-    title: "GEOshaker — Prêt pour les moteurs génératifs ?",
+    title: "GEOshaker. Prêt pour les moteurs génératifs ?",
     description:
       "Testez en 10 secondes si votre site est lisible par les IA. Score de 0 à 100, détail par étape.",
     type: "website",

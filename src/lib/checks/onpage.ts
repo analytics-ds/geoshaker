@@ -266,7 +266,7 @@ export async function checkOnPage(params: {
   }
   const metaDetail = metaResults
     .map((r) => `${r.label} : ${r.value ? `${r.value.length} car` : "absente"}`)
-    .join(" · ") + (metaDuplicates.size > 0 ? " — doublon détecté" : "");
+    .join(" · ") + (metaDuplicates.size > 0 ? ", doublon détecté" : "");
   const metaStatus: Check["status"] = metaMissing.length === probes.length
     ? "fail"
     : (metaMissing.length > 0 || metaDuplicates.size > 0 || metaTooShort.length > 0)

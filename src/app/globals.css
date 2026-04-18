@@ -175,8 +175,8 @@ input.geoshaker-url-input {
   min-height: 72px;
 }
 button.geoshaker-url-button {
-  height: 80px !important;
-  min-height: 80px;
+  height: 76px !important;
+  min-height: 76px;
 }
 @media (min-width: 640px) {
   input.geoshaker-url-input {

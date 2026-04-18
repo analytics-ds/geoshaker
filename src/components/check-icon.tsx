@@ -47,7 +47,7 @@ export function CheckIcon({ status }: { status: Check["status"] }) {
       style={{ background: "var(--bg-warm)", color: "var(--text-muted)" }}
       aria-label="Non testable"
     >
-      <span className="text-xs font-semibold">—</span>
+      <span className="text-xs font-semibold">·</span>
     </span>
   );
 }

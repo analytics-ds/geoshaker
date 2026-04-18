@@ -270,7 +270,7 @@ function DetailPanel({ result }: { result: AuditResult }) {
 
 function WhatWeCheck() {
   const items = [
-    { n: "01", title: "Robots.txt et accès réel des IA", desc: "ChatGPT, Claude, Perplexity et Gemini sont-ils vraiment autorisés — pare-feu compris ?" },
+    { n: "01", title: "Robots.txt et accès réel des IA", desc: "ChatGPT, Claude, Perplexity et Gemini sont-ils vraiment autorisés, pare-feu compris ?" },
     { n: "02", title: "Rendu sans JavaScript", desc: "Votre contenu est-il visible par les IA qui n’exécutent pas le JS ?" },
     { n: "03", title: "Données structurées (JSON-LD)", desc: "Sont-elles dans le HTML source, pas seulement injectées via GTM ?" },
     { n: "04", title: "Temps de réponse serveur", desc: "TTFB sous 500 ms. Les IA crawlent vite et abandonnent les sites lents." },
