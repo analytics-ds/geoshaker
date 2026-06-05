@@ -9,7 +9,7 @@ const PRIORITY_WEIGHT: Record<Priority, number> = {
 
 const STATUS_CREDIT: Record<Check["status"], number> = {
   pass: 1,
-  warn: 0.5,
+  warn: 0.3,
   fail: 0,
   skip: 0,
 };
@@ -17,6 +17,28 @@ const STATUS_CREDIT: Record<Check["status"], number> = {
 // Checks dont l echec rend l audit quasiment nul : l acces des IA.
 // Si une IA est bloquée, le site ne peut pas être cité, quel que soit le reste.
 const FATAL_CHECK_IDS: CheckId[] = ["1.1", "1.2", "1.3", "1.4", "1.5"];
+
+// Checks specifiquement GEO (au-dela du SEO classique) : ponderes plus lourd.
+// Ce sont eux qui font la difference pour etre lu et cite par les moteurs IA,
+// et c est precisement la couche que les sites "bien faits en SEO" negligent.
+const GEO_CORE_IDS = new Set<CheckId>([
+  "3.1", "3.2", "3.3", "3.4", "3.5", "3.6", // donnees structurees
+  "5.1", "5.2", "5.3",                       // llms.txt
+  "6i", "6j",                                // OpenGraph/Twitter, FAQ
+  "7.1",                                     // version EN
+]);
+const GEO_WEIGHT_BOOST = 1.6;
+
+// Fondations GEO : sans elles, un site n est pas "GEO-ready" meme avec un SEO
+// classique impeccable. Si 3+ fondations manquent, le score est plafonne.
+const GEO_FOUNDATIONS: Array<{ label: string; achieved: (by: Map<CheckId, Check>) => boolean }> = [
+  { label: "llms.txt", achieved: (m) => m.get("5.1")?.status === "pass" },
+  { label: "JSON-LD complet", achieved: (m) => m.get("3.1")?.status === "pass" && m.get("3.4")?.status === "pass" },
+  { label: "FAQ structurée", achieved: (m) => m.get("6j")?.status === "pass" },
+  { label: "OpenGraph/Twitter", achieved: (m) => m.get("6i")?.status === "pass" },
+  { label: "version EN", achieved: (m) => m.get("7.1")?.status === "pass" },
+];
+const GEO_CAP = 49;
 
 export const STEP_TITLES: Record<StepId, string> = {
   1: "Robots.txt et accès des IA",
@@ -33,7 +55,8 @@ export function computeScore(checks: Check[]): number {
   let max = 0;
   for (const c of checks) {
     if (c.status === "skip") continue;
-    const w = PRIORITY_WEIGHT[c.priority];
+    let w = PRIORITY_WEIGHT[c.priority];
+    if (GEO_CORE_IDS.has(c.id)) w *= GEO_WEIGHT_BOOST;
     max += w;
     earned += w * STATUS_CREDIT[c.status];
   }
@@ -49,6 +72,16 @@ export function computeScore(checks: Check[]): number {
     const cap = fatalFails >= 3 ? 5 : fatalFails === 2 ? 15 : 30;
     score = Math.min(score, cap);
   }
+
+  // Plafond GEO-readiness : un bon SEO classique ne suffit pas. Si la couche
+  // GEO-specifique est trop faible (3+ fondations manquantes), on plafonne.
+  const byId = new Map<CheckId, Check>();
+  for (const c of checks) byId.set(c.id, c);
+  const missingFoundations = GEO_FOUNDATIONS.filter((f) => !f.achieved(byId)).length;
+  if (missingFoundations >= 3) {
+    score = Math.min(score, GEO_CAP);
+  }
+
   return score;
 }
 
