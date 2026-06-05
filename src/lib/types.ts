@@ -5,9 +5,9 @@ export type CheckId =
   | "1.1" | "1.2" | "1.3" | "1.4" | "1.5"
   | "2.1" | "2.2" | "2.3" | "2.4"
   | "3.1" | "3.2" | "3.3" | "3.4" | "3.5" | "3.6"
-  | "4.1" | "4.2" | "4.3"
-  | "5.1"
-  | "6a" | "6b" | "6c" | "6d" | "6e" | "6f" | "6g" | "6h"
+  | "4.1" | "4.2" | "4.3" | "4.4" | "4.5"
+  | "5.1" | "5.2" | "5.3"
+  | "6a" | "6b" | "6c" | "6d" | "6e" | "6f" | "6g" | "6h" | "6i" | "6j" | "6k" | "6l"
   | "7.1";
 
 export type StepId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -52,5 +52,8 @@ export interface FetchOutcome {
   body?: string;
   ttfbMs?: number;
   contentType?: string;
+  contentEncoding?: string;
+  etag?: string;
+  lastModified?: string;
   error?: string;
 }

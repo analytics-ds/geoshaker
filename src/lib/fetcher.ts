@@ -45,6 +45,7 @@ async function singleFetch(
         accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain,*/*;q=0.8",
         "accept-language": "fr-FR,fr;q=0.9,en;q=0.8",
+        "accept-encoding": "gzip, deflate, br",
       },
       cache: "no-store",
     });
@@ -58,6 +59,9 @@ async function singleFetch(
       body,
       ttfbMs: ttfb,
       contentType,
+      contentEncoding: res.headers.get("content-encoding") ?? undefined,
+      etag: res.headers.get("etag") ?? undefined,
+      lastModified: res.headers.get("last-modified") ?? undefined,
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

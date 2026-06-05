@@ -8,6 +8,7 @@ import { checkTtfb } from "./checks/ttfb";
 import { checkLlmsTxt } from "./checks/llmstxt";
 import { checkOnPage } from "./checks/onpage";
 import { checkInternational } from "./checks/international";
+import { checkServerHeaders } from "./checks/server";
 import { discoverTypedUrls, fetchMany } from "./discovery";
 import { detectSiteType, extractSitemapLocs } from "./site-type";
 
@@ -114,11 +115,14 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
     siteType
   );
 
+  const serverChecks = checkServerHeaders(homeOutcome);
+
   const allChecks: Check[] = [
     ...robots.checks,
     ...renderingChecks,
     ...jsonLdChecks,
     ...ttfbChecks,
+    ...serverChecks,
     ...llmsChecks,
     ...onpageChecks,
     ...intlChecks,

@@ -273,9 +273,9 @@ function WhatWeCheck() {
     { n: "01", title: "Robots.txt et accès réel des IA", desc: "ChatGPT, Claude, Perplexity et Gemini sont-ils vraiment autorisés, pare-feu compris ?" },
     { n: "02", title: "Rendu sans JavaScript", desc: "Votre contenu est-il visible par les IA qui n’exécutent pas le JS ?" },
     { n: "03", title: "Données structurées (JSON-LD)", desc: "Sont-elles dans le HTML source, pas seulement injectées via GTM ?" },
-    { n: "04", title: "Temps de réponse serveur", desc: "TTFB sous 500 ms. Les IA crawlent vite et abandonnent les sites lents." },
+    { n: "04", title: "Temps de réponse et cache serveur", desc: "TTFB sous 500 ms, compression et cache. Les IA crawlent vite et abandonnent les sites lents." },
     { n: "05", title: "Fichier llms.txt", desc: "Votre manifeste GEO guide-t-il les IA vers vos pages stratégiques ?" },
-    { n: "06", title: "Structure on-page et crawl", desc: "Sitemap, H1 unique, HTTPS, canonical, hiérarchie, 300 mots minimum." },
+    { n: "06", title: "Structure on-page et crawl", desc: "Sitemap, H1, HTTPS, canonical, OpenGraph, FAQ, sommaire, 300 mots minimum." },
     { n: "07", title: "Version internationale", desc: "Marché LLM = marché anglophone. Version EN accessible et déclarée via hreflang ?" },
   ];
   return (

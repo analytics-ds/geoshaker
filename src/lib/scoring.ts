@@ -22,7 +22,7 @@ export const STEP_TITLES: Record<StepId, string> = {
   1: "Robots.txt et accès des IA",
   2: "Rendu sans JavaScript",
   3: "Données structurées (JSON-LD)",
-  4: "Temps de réponse serveur",
+  4: "Temps de réponse et cache serveur",
   5: "Fichier llms.txt",
   6: "Structure on-page et crawl",
   7: "Version internationale",

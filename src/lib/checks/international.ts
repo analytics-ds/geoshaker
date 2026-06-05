@@ -54,7 +54,7 @@ export async function checkInternational(
     id: "7.1",
     step: 7,
     label: "Version anglaise accessible et déclarée",
-    priority: "MOYENNE",
+    priority: "HAUTE",
     status,
     detail:
       status === "pass"

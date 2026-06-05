@@ -156,8 +156,9 @@ export async function checkRobots(siteUrl: string): Promise<{
         status = "pass";
         detail = `${bot} est autorisé par une règle explicite dans votre robots.txt.`;
       } else {
-        status = "pass";
-        detail = `Aucune règle spécifique pour ${bot}. En l’absence de Disallow: / global, l’accès est autorisé par défaut.`;
+        status = "warn";
+        detail = `Aucune règle explicite pour ${bot}. L’accès est toléré par défaut, mais sans déclaration claire vous laissez Google décider à votre place de l’usage de votre contenu par Gemini et les AI Overviews.`;
+        advice = `Déclarez explicitement votre choix dans robots.txt : User-agent: ${bot}\\nAllow: / (pour autoriser) afin de ne pas dépendre du comportement par défaut.`;
       }
       checks.push({
         id,

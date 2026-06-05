@@ -1,6 +1,40 @@
 import type { Check, FetchOutcome } from "../types";
 import { fetchText, rootOrigin } from "../fetcher";
 import { extractTags, extractBlocks, getAttr, hasAttrEquals } from "../html-parser";
+import { extractJsonLd, extractSchemaTypes } from "./jsonld";
+
+function extractSocialMeta(html: string): { og: number; twitter: boolean } {
+  const metaTags = extractTags(html, "meta");
+  let og = 0;
+  let twitter = false;
+  for (const t of metaTags) {
+    const key = (getAttr(t, "property") ?? getAttr(t, "name") ?? "").toLowerCase();
+    if (key === "og:title" || key === "og:description" || key === "og:image" || key === "og:type" || key === "og:url") og++;
+    if (key === "twitter:card") twitter = true;
+  }
+  return { og, twitter };
+}
+
+function hasFaqBlock(html: string): boolean {
+  const types = extractSchemaTypes(extractJsonLd(html));
+  if (types.includes("FAQPage") || types.includes("QAPage")) return true;
+  if (/<details[\s>]/i.test(html)) return true;
+  return false;
+}
+
+function hasClickableToc(html: string): boolean {
+  // Sommaire = plusieurs liens d ancrage internes, generalement en haut de page.
+  const top = html.slice(0, Math.max(2000, Math.floor(html.length * 0.5)));
+  const anchors = extractTags(top, "a");
+  const targets = new Set<string>();
+  for (const a of anchors) {
+    const href = getAttr(a, "href");
+    if (href && /^#[\w-]{2,}$/.test(href) && !/^#(top|content|main|menu|nav)$/i.test(href)) {
+      targets.add(href.toLowerCase());
+    }
+  }
+  return targets.size >= 3;
+}
 
 function textContent(html: string): string {
   return html
@@ -351,6 +385,93 @@ export async function checkOnPage(params: {
       status6h === "pass"
         ? undefined
         : "Visez un minimum de 300 mots de contenu éditorial par page. Les IA ont besoin de matière textuelle pour comprendre et citer votre site.",
+  });
+
+  // 6i OpenGraph + Twitter Card (sur la home)
+  const social = extractSocialMeta(firstProbe.html);
+  const ogOk = social.og >= 2;
+  const socialStatus: Check["status"] = ogOk && social.twitter ? "pass" : ogOk || social.twitter ? "warn" : "fail";
+  checks.push({
+    id: "6i",
+    step: 6,
+    label: "Balises OpenGraph et Twitter Card",
+    priority: "HAUTE",
+    status: socialStatus,
+    detail:
+      socialStatus === "pass"
+        ? "OpenGraph et Twitter Card présents : votre contenu est correctement décrit quand il est partagé ou cité."
+        : ogOk
+        ? "OpenGraph présent mais pas de Twitter Card (twitter:card). Le partage sur X et la lecture par certaines IA est dégradé."
+        : social.twitter
+        ? "Twitter Card présente mais OpenGraph incomplet (og:title, og:description, og:image manquants)."
+        : "Aucune balise OpenGraph ni Twitter Card détectée. Quand votre page est partagée ou citée, aucun titre, description ou image n’est exposé.",
+    advice:
+      socialStatus === "pass"
+        ? undefined
+        : "Ajoutez les balises OpenGraph (og:title, og:description, og:image, og:type, og:url) et une twitter:card dans le <head> de chaque page stratégique.",
+  });
+
+  // 6j FAQ en accordéon (FAQPage JSON-LD ou <details>)
+  const faq = hasFaqBlock(firstProbe.html);
+  checks.push({
+    id: "6j",
+    step: 6,
+    label: "Section FAQ structurée (accordéon ou FAQPage)",
+    priority: "MOYENNE",
+    status: faq ? "pass" : "fail",
+    detail: faq
+      ? "Bloc FAQ détecté (schéma FAQPage ou éléments <details>). Format idéal pour être repris en réponse directe par les IA."
+      : "Aucune FAQ structurée détectée. Les questions/réponses sont le format le plus cité par ChatGPT, Perplexity et les AI Overviews.",
+    advice: faq
+      ? undefined
+      : "Ajoutez une FAQ en accordéon HTML5 (<details>/<summary>) avec un schéma FAQPage en JSON-LD sur vos pages stratégiques.",
+  });
+
+  // 6k Sommaire cliquable sous le H1
+  const toc = hasClickableToc(firstProbe.html);
+  checks.push({
+    id: "6k",
+    step: 6,
+    label: "Sommaire cliquable (table des matières)",
+    priority: "MOYENNE",
+    status: toc ? "pass" : "fail",
+    detail: toc
+      ? "Sommaire d’ancrages internes détecté. Il aide les IA à cartographier la structure de la page et à citer la bonne section."
+      : "Aucun sommaire cliquable détecté. Sur les pages longues, une table des matières avec ancres aide les IA à extraire la bonne section.",
+    advice: toc
+      ? undefined
+      : "Ajoutez sous le H1 un sommaire avec des liens d’ancrage (<a href=\"#section\">) pointant vers vos H2, sur vos pages de contenu longues.",
+  });
+
+  // 6l Codes HTTP des pages stratégiques
+  const httpProbed: Array<{ label: string; outcome: FetchOutcome }> = [];
+  if (homeOutcome) httpProbed.push({ label: "accueil", outcome: homeOutcome });
+  for (const e of extraOutcomes) {
+    if (e.outcome) {
+      const label = e.label === "blog" ? "blog" : e.label === "about" ? "à propos" : "produit";
+      httpProbed.push({ label, outcome: e.outcome });
+    }
+  }
+  const httpErrors = httpProbed.filter((p) => !p.outcome.ok || (p.outcome.status ?? 0) >= 400);
+  const httpDetail = httpProbed
+    .map((p) => `${p.label} : ${p.outcome.status ?? "erreur"}`)
+    .join(" · ");
+  checks.push({
+    id: "6l",
+    step: 6,
+    label: "Codes HTTP corrects sur les pages stratégiques",
+    priority: "HAUTE",
+    status: httpProbed.length === 0 ? "skip" : httpErrors.length === 0 ? "pass" : httpErrors.length === 1 ? "warn" : "fail",
+    detail:
+      httpProbed.length === 0
+        ? "Aucune page stratégique testable."
+        : httpErrors.length === 0
+        ? `Toutes les pages testées répondent correctement (${httpDetail}).`
+        : `${httpErrors.length} page(s) en erreur. ${httpDetail}.`,
+    advice:
+      httpErrors.length === 0
+        ? undefined
+        : "Corrigez les pages qui ne renvoient pas un 200 : une page stratégique en 404/410/5xx ne sera ni indexée ni citée par les IA.",
   });
 
   return checks;
