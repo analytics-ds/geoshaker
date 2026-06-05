@@ -11,8 +11,8 @@ export default async function QrPage() {
     margin: 1,
     width: 600,
     color: {
-      dark: "#0A0A0A",
-      light: "#F2EDE4",
+      dark: "#10104C",
+      light: "#FFFFFF",
     },
     errorCorrectionLevel: "M",
   });

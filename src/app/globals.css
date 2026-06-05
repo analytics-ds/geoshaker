@@ -1,41 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  /* Palette datashake (extraite du deck GEO Technique) */
-  --bg: #F2EDE4;
-  --bg-warm: #E8E2D5;
+  /* Palette datashake (extraite de datashake.fr) */
+  --bg: #FFFFFF;
+  --bg-warm: #F6F7FF;
   --bg-card: #FFFFFF;
-  --bg-card-tint: #F7F3EB;
-  --bg-dark: #0A0A0A;
-  --bg-code: #0A0A0A;
+  --bg-card-tint: #F6F7FF;
+  --bg-dark: #0D0C54;
+  --bg-code: #10104C;
 
-  --border: #D4CFC5;
-  --border-strong: #C2BDB4;
+  --border: #DADAE3;
+  --border-strong: #B0B0C1;
 
-  --text: #0A0A0A;
-  --text-secondary: #56524C;
-  --text-muted: #8C887F;
-  --text-inverse: #F2EDE4;
+  --text: #10104C;
+  --text-secondary: #403F8B;
+  --text-muted: #717194;
+  --text-inverse: #FFFFFF;
 
-  --accent: #3B4FF0;
-  --accent-hover: #2B3FD0;
-  --accent-soft: #E4E8FF;
+  --accent: #002BFF;
+  --accent-hover: #0021CC;
+  --accent-soft: #E1E6FF;
+  --flash: #04EEFF;
+  --gradient-brand: linear-gradient(135deg, #04EEFF 0%, #002BFF 100%);
 
   --green: #1F9A5E;
-  --green-bg: #DFF1E7;
+  --green-bg: #DEF3E8;
   --orange: #D4890E;
   --orange-bg: #FBEFD8;
-  --red: #D4382F;
-  --red-bg: #FBE1DE;
+  --red: #E5484D;
+  --red-bg: #FFE0E0;
 
   --radius: 14px;
   --radius-sm: 8px;
   --radius-xs: 4px;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.04);
-  --shadow: 0 2px 12px rgba(10, 10, 10, 0.05);
-  --shadow-lg: 0 12px 40px rgba(10, 10, 10, 0.08);
+  --shadow-sm: 0 1px 2px rgba(16, 16, 76, 0.05);
+  --shadow: 0 2px 14px rgba(16, 16, 76, 0.07);
+  --shadow-lg: 0 14px 44px rgba(16, 16, 76, 0.12);
 
   --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -59,6 +61,7 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
+  --color-flash: var(--flash);
 
   --color-brand-green: var(--green);
   --color-brand-green-bg: var(--green-bg);
@@ -107,6 +110,14 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 12px;
 }
+.ds-logo-mark-img {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: url("/datashake-mark.jpg") no-repeat center;
+  background-size: contain;
+}
 .ds-logo-mark {
   position: relative;
   width: 22px;
@@ -117,15 +128,17 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   width: 10px;
   height: 10px;
-  background: var(--text);
+  border-radius: 2px;
 }
 .ds-logo-mark .sq1 {
   top: 0;
   left: 12px;
+  background: var(--accent);
 }
 .ds-logo-mark .sq2 {
   top: 10px;
   left: 0;
+  background: var(--flash);
 }
 .ds-logo-name {
   font-weight: 800;
@@ -134,13 +147,23 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text);
 }
 .ds-logo-suffix {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-family: var(--font-mono), monospace;
   font-weight: 400;
   font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-top: 2px;
+  margin-top: 3px;
+}
+.ds-logo-ds {
+  display: inline-block;
+  width: 62px;
+  height: 12px;
+  background: url("/datashake-logotype.svg") no-repeat left center;
+  background-size: contain;
 }
 
 /* Petit pattern de pixels dans les coins (deco datashake) */
@@ -154,19 +177,21 @@ h1, h2, h3, h4, h5, h6 {
 .ds-pixels::after {
   content: "";
   position: absolute;
-  background: var(--text);
+  border-radius: 1px;
 }
 .ds-pixels::before {
   width: 5px;
   height: 5px;
   top: 0;
   left: 9px;
+  background: var(--accent);
 }
 .ds-pixels::after {
   width: 5px;
   height: 5px;
   top: 7px;
   left: 0;
+  background: var(--flash);
 }
 
 /* Form sizing : mobile = large target, desktop = compact */
@@ -194,7 +219,10 @@ button.geoshaker-url-button {
   background: var(--bg-dark);
   color: var(--text-inverse);
 }
-.ds-dark .ds-logo-mark .sq {
+.ds-dark .ds-logo-mark .sq1 {
+  background: var(--flash);
+}
+.ds-dark .ds-logo-mark .sq2 {
   background: var(--text-inverse);
 }
 .ds-dark .ds-logo-name {

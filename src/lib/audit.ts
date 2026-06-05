@@ -1,5 +1,5 @@
 import type { AuditResult, Check, SiteType, FetchOutcome } from "./types";
-import { fetchText, normalizeUrl } from "./fetcher";
+import { fetchHome, normalizeUrl } from "./fetcher";
 import { buildResult } from "./scoring";
 import { checkRobots } from "./checks/robots";
 import { checkRendering } from "./checks/rendering";
@@ -20,11 +20,7 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
     return buildResult(rawUrl, rawUrl, [], 0, "URL invalide. Exemple attendu : exemple.fr ou https://exemple.fr");
   }
 
-  const [homeOutcome, robots, sitemapLocs] = await Promise.all([
-    fetchText(normalized, { timeoutMs: 10_000 }),
-    checkRobots(normalized),
-    extractSitemapLocs(normalized),
-  ]);
+  const homeOutcome = await fetchHome(normalized, { timeoutMs: 10_000 });
 
   if (!homeOutcome.ok || !homeOutcome.body) {
     const durationMs = Math.round(performance.now() - start);
@@ -46,8 +42,17 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
     return buildResult(rawUrl, normalized, [], durationMs, msg);
   }
 
+  // URL reellement joignable (apex sans HTTPS -> www, redirections suivies).
+  // Tous les checks suivants doivent partir de cette origine, pas de l URL saisie.
+  const resolved = homeOutcome.url || normalized;
+
+  const [robots, sitemapLocs] = await Promise.all([
+    checkRobots(resolved),
+    extractSitemapLocs(resolved),
+  ]);
+
   // Decouverte des pages typees (blog, about, produit)
-  const discovered = await discoverTypedUrls(normalized, homeOutcome);
+  const discovered = await discoverTypedUrls(resolved, homeOutcome);
 
   // Detection du type de site
   const siteType: SiteType = detectSiteType({
@@ -77,15 +82,15 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
   if (productOut && extraOutcomes.length < 2) extraOutcomes.push({ label: "product", outcome: productOut });
 
   const [llmsChecks, onpageChecks, intlChecks] = await Promise.all([
-    checkLlmsTxt(normalized),
+    checkLlmsTxt(resolved),
     checkOnPage({
-      siteUrl: normalized,
+      siteUrl: resolved,
       homeOutcome,
       extraOutcomes,
       robotsBody: robots.body,
       sitemapUrlsFromRobots: robots.sitemapUrls,
     }),
-    checkInternational(normalized, homeOutcome),
+    checkInternational(resolved, homeOutcome),
   ]);
 
   const renderingChecks = checkRendering(
@@ -120,5 +125,5 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
   ];
 
   const durationMs = Math.round(performance.now() - start);
-  return buildResult(rawUrl, normalized, allChecks, durationMs, undefined, siteType);
+  return buildResult(rawUrl, resolved, allChecks, durationMs, undefined, siteType);
 }

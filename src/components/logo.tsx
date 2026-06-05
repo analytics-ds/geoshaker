@@ -2,14 +2,13 @@ import Link from "next/link";
 
 export function Logo({ href = "/" }: { href?: string }) {
   return (
-    <Link href={href} className="ds-logo" aria-label="GEOshaker, retour à l’accueil">
-      <span className="ds-logo-mark" aria-hidden="true">
-        <span className="sq sq1" />
-        <span className="sq sq2" />
-      </span>
+    <Link href={href} className="ds-logo" aria-label="GEOshaker par datashake, retour à l’accueil">
       <span className="flex flex-col leading-tight">
         <span className="ds-logo-name">GEOshaker</span>
-        <span className="ds-logo-suffix">par datashake</span>
+        <span className="ds-logo-suffix">
+          <span>par</span>
+          <span className="ds-logo-ds" aria-hidden="true" />
+        </span>
       </span>
     </Link>
   );

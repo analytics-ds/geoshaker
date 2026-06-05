@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Montserrat, Rubik } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+const montserrat = Montserrat({
   variable: "--font-body",
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const rubik = Rubik({
   variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#F2EDE4",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({
@@ -53,7 +53,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${montserrat.variable} ${rubik.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

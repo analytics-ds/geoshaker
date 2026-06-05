@@ -74,6 +74,51 @@ async function singleFetch(
  * 2. Chrome UA (bypass WAF basiques)
  * 3. GPTBot UA (bypass WAF qui whitelistent les bots connus)
  */
+function hostVariant(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.startsWith("www.")) u.hostname = u.hostname.slice(4);
+    else u.hostname = "www." + u.hostname;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Recupere la home en tolerant les domaines apex sans HTTPS.
+ * Beaucoup de sites ne servent le certificat que sur www. et ne redirigent
+ * l apex qu en HTTP. Si https://apex echoue au niveau reseau/TLS (aucun
+ * status HTTP en retour), on retente la variante www. puis http:// avant
+ * d abandonner. Un 4xx/5xx est en revanche conserve (l hote est joignable).
+ */
+export async function fetchHome(
+  url: string,
+  opts?: { timeoutMs?: number }
+): Promise<FetchOutcome> {
+  const first = await fetchText(url, opts);
+  if (first.status) return first;
+
+  const variant = hostVariant(url);
+  if (variant) {
+    const second = await fetchText(variant, opts);
+    if (second.status) return second;
+  }
+
+  try {
+    const httpUrl = new URL(url);
+    if (httpUrl.protocol === "https:") {
+      httpUrl.protocol = "http:";
+      const third = await fetchText(httpUrl.toString(), opts);
+      if (third.status) return third;
+    }
+  } catch {
+    // ignore
+  }
+
+  return first;
+}
+
 export async function fetchText(
   url: string,
   opts?: { timeoutMs?: number; method?: string; ua?: string }
