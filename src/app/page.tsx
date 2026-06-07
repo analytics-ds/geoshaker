@@ -3,7 +3,7 @@ import { AuditApp } from "@/components/audit-app";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <header className="w-full border-b border-[color:var(--border-default)] bg-[color:var(--bg)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center">
           <Logo />

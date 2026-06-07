@@ -127,7 +127,7 @@ export function AuditApp() {
             <label htmlFor="url-input" className="ds-eyebrow">
               URL à tester
             </label>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 lg:max-w-none sm:max-w-md">
               <input
                 id="url-input"
                 name="url"
@@ -142,12 +142,12 @@ export function AuditApp() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 disabled={loading}
-                className="geoshaker-url-input flex-1 px-5 sm:px-3.5 rounded-[14px] sm:rounded-[10px] border-2 border-[color:var(--border-strong)] bg-[color:var(--bg-card)] placeholder:text-[color:var(--text-muted)] focus:border-[color:var(--accent)] focus:outline-none font-medium text-[18px] sm:text-[16px]"
+                className="geoshaker-url-input flex-1 min-w-0 px-5 sm:px-3.5 rounded-[14px] sm:rounded-[10px] border-2 border-[color:var(--border-strong)] bg-[color:var(--bg-card)] placeholder:text-[color:var(--text-muted)] focus:border-[color:var(--accent)] focus:outline-none font-medium text-[18px] sm:text-[15px]"
               />
               <button
                 type="submit"
                 disabled={loading || !url.trim()}
-                className="geoshaker-url-button px-6 sm:px-5 rounded-[14px] sm:rounded-[10px] font-bold text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[130px] sm:min-w-[120px]"
+                className="geoshaker-url-button flex-shrink-0 px-6 sm:px-4 rounded-[14px] sm:rounded-[10px] font-bold text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[130px] sm:min-w-[104px]"
                 style={{
                   background: loading || !url.trim() ? "var(--bg-warm)" : "var(--text)",
                   color: loading || !url.trim() ? "var(--text-muted)" : "var(--text-inverse)",

@@ -205,12 +205,12 @@ button.geoshaker-url-button {
 }
 @media (min-width: 640px) {
   input.geoshaker-url-input {
-    height: 52px !important;
-    min-height: 52px;
+    height: 48px !important;
+    min-height: 48px;
   }
   button.geoshaker-url-button {
-    height: 52px !important;
-    min-height: 52px;
+    height: 48px !important;
+    min-height: 48px;
   }
 }
 
