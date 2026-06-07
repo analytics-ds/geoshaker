@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "geoshaker",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2024-12-30",
+  // nodejs_compat : runtime Node pour les routes API.
+  // global_fetch_strictly_public : les fetch() de l'audit doivent sortir sur
+  // l'internet public (sites tiers), pas etre routes en interne par Cloudflare.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Reference a soi-meme (recommande par OpenNext, sans frais).
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "geoshaker"
+    }
+  ]
+  // D1 pour le lead capture : a ajouter a l'etape suivante.
+}
