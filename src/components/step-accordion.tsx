@@ -8,6 +8,9 @@ export function StepAccordion({ step, defaultOpen = false }: { step: StepSummary
   const total = step.totalCount;
   const hasFail = step.checks.some((c) => c.status === "fail");
   const hasWarn = step.checks.some((c) => c.status === "warn");
+  // On n'affiche dans le detail que les points a corriger (echecs + avertissements).
+  // Les checks valides ou non applicables sont masques : seul ce qui cloche compte.
+  const actionable = step.checks.filter((c) => c.status === "fail" || c.status === "warn");
   const dotColor = total === 0
     ? "var(--text-muted)"
     : hasFail
@@ -58,9 +61,16 @@ export function StepAccordion({ step, defaultOpen = false }: { step: StepSummary
           <path d="M5 7L10 12L15 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       </button>
-      {open && (
+      {open && actionable.length === 0 && (
+        <div className="border-t border-[color:var(--border-default)] px-3.5 sm:px-4 py-3.5">
+          <p className="text-sm text-[color:var(--text-secondary)]">
+            Rien à corriger sur cette étape, tout est validé.
+          </p>
+        </div>
+      )}
+      {open && actionable.length > 0 && (
         <div className="border-t border-[color:var(--border-default)] divide-y divide-[color:var(--border-default)]">
-          {step.checks.map((c) => (
+          {actionable.map((c) => (
             <div key={c.id} className="px-3.5 sm:px-4 py-3.5 flex gap-3">
               <CheckIcon status={c.status} />
               <div className="flex-1 min-w-0">

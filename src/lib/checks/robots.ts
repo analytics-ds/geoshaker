@@ -147,18 +147,18 @@ export async function checkRobots(siteUrl: string): Promise<{
       if (!present) {
         status = "warn";
         detail = `Aucun fichier robots.txt détecté. En l’absence de règle explicite, ${aiName} est techniquement autorisé mais une déclaration est recommandée.`;
-        advice = `Créez un robots.txt avec : User-agent: ${bot}\\nAllow: /`;
+        advice = `Créez un robots.txt avec : User-agent: ${bot} puis Allow: /`;
       } else if (robotsVerdict === "blocked") {
         status = "fail";
         detail = `${bot} est bloqué par un Disallow: / dans votre robots.txt. ${aiName} ne pourra pas utiliser votre contenu.`;
-        advice = `Retirez le Disallow: / pour ${bot} ou ajoutez explicitement : User-agent: ${bot}\\nAllow: /`;
+        advice = `Retirez le Disallow: / pour ${bot} ou ajoutez explicitement : User-agent: ${bot} puis Allow: /`;
       } else if (robotsVerdict === "allowed") {
         status = "pass";
         detail = `${bot} est autorisé par une règle explicite dans votre robots.txt.`;
       } else {
         status = "warn";
         detail = `Aucune règle explicite pour ${bot}. L’accès est toléré par défaut, mais sans déclaration claire vous laissez Google décider à votre place de l’usage de votre contenu par Gemini et les AI Overviews.`;
-        advice = `Déclarez explicitement votre choix dans robots.txt : User-agent: ${bot}\\nAllow: / (pour autoriser) afin de ne pas dépendre du comportement par défaut.`;
+        advice = `Déclarez explicitement votre choix dans robots.txt : User-agent: ${bot} puis Allow: / (pour autoriser) afin de ne pas dépendre du comportement par défaut.`;
       }
       checks.push({
         id,
@@ -184,7 +184,7 @@ export async function checkRobots(siteUrl: string): Promise<{
       // robots.txt bloque : ca prime
       status = "fail";
       detail = `${bot} est bloqué par un Disallow: / dans votre robots.txt. ${aiName} ne peut pas crawler le site.`;
-      advice = `Retirez le Disallow: / pour ${bot} ou ajoutez explicitement : User-agent: ${bot}\\nAllow: /`;
+      advice = `Retirez le Disallow: / pour ${bot} ou ajoutez explicitement : User-agent: ${bot} puis Allow: /`;
     } else if (uaBlocked) {
       // robots.txt autorise mais le pare-feu bloque : le piege classique Cloudflare/WAF
       status = "fail";
