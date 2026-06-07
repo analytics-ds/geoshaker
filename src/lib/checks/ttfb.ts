@@ -36,6 +36,19 @@ export function checkTtfb(specs: TtfbSpec[], siteType: SiteType): Check[] {
       };
     }
     const o = s.outcome;
+    // Contenu recupere via Bright Data (WAF contourne) : pas de TTFB serveur reel.
+    // On ne peut pas le mesurer, donc skip plutot que d'inventer un echec.
+    if (o.via === "brightdata") {
+      return {
+        id: s.id,
+        step: 4,
+        label: s.label,
+        priority: "HAUTE",
+        status: "skip",
+        detail:
+          "Page récupérée via un déblocage anti-bot : le temps de réponse réel du serveur n’a pas pu être mesuré.",
+      };
+    }
     if (!o.ok || typeof o.ttfbMs !== "number") {
       return {
         id: s.id,

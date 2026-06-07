@@ -1,4 +1,5 @@
 import type { FetchOutcome } from "./types";
+import { brightDataFetch, looksLikeChallengePage } from "./brightdata";
 
 const GEOSHAKER_UA = "GEOshaker/1.0 (+https://geoshaker.fr; audit GEO)";
 const CHROME_UA =
@@ -130,6 +131,9 @@ export async function fetchText(
   const method = opts?.method ?? "GET";
   const timeout = opts?.timeoutMs ?? DEFAULT_TIMEOUT;
 
+  // Test d'acces bot a UA impose (ex : GPTBot) : on respecte strictement le
+  // choix et on NE bascule PAS sur Bright Data. Ce test doit mesurer l'acces
+  // reel depuis une IP datacenter, pas le tricher via un proxy residentiel.
   if (opts?.ua) {
     return singleFetch(url, opts.ua, method, timeout);
   }
@@ -138,10 +142,33 @@ export async function fetchText(
   let last: FetchOutcome | null = null;
   for (const ua of cascade) {
     const res = await singleFetch(url, ua, method, timeout);
-    if (res.ok || !shouldRetry(res.status)) {
+    // Succes franc : on rend, sauf si le corps est en realite un challenge
+    // anti-bot (page "Just a moment...", DataDome...) qu'on peut debloquer.
+    if (res.ok && !(method === "GET" && res.body && looksLikeChallengePage(res.body))) {
+      return res;
+    }
+    // Erreur non liee a un blocage (404, 5xx, reseau) : inutile d'insister.
+    if (!res.ok && !shouldRetry(res.status)) {
       return res;
     }
     last = res;
   }
+
+  // Cascade epuisee sur un blocage (403/401/429) ou un challenge : fallback
+  // Bright Data Web Unlocker (IP residentielle FR). Reservee au GET.
+  if (method === "GET") {
+    const body = await brightDataFetch(url, { timeoutMs: timeout * 2 });
+    if (body) {
+      return {
+        ok: true,
+        status: 200,
+        url,
+        body,
+        contentType: "text/html",
+        via: "brightdata",
+      };
+    }
+  }
+
   return last ?? { ok: false, url };
 }

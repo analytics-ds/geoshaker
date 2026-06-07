@@ -7,6 +7,17 @@ import type { Check, FetchOutcome } from "../types";
  * telechargent plus lourd, sans en-tete de cache ils re-telechargent tout.
  */
 export function checkServerHeaders(homeOutcome: FetchOutcome | null): Check[] {
+  // Contenu recupere via Bright Data (WAF contourne) : les en-tetes HTTP reels
+  // du serveur ne sont pas exposes. On skip plutot que d'inventer un echec.
+  if (homeOutcome?.via === "brightdata") {
+    const skipDetail =
+      "Page récupérée via un déblocage anti-bot : les en-têtes HTTP réels du serveur n’ont pas pu être lus.";
+    return [
+      { id: "4.4", step: 4, label: "Compression gzip ou Brotli activée", priority: "HAUTE", status: "skip", detail: skipDetail },
+      { id: "4.5", step: 4, label: "En-tête de cache (ETag ou Last-Modified)", priority: "MOYENNE", status: "skip", detail: skipDetail },
+    ];
+  }
+
   const checks: Check[] = [];
 
   const enc = (homeOutcome?.contentEncoding ?? "").toLowerCase();

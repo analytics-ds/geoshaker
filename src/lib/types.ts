@@ -56,4 +56,7 @@ export interface FetchOutcome {
   etag?: string;
   lastModified?: string;
   error?: string;
+  // "brightdata" quand le contenu a ete recupere via le fallback Web Unlocker
+  // (le fetch direct depuis l'IP du Worker etait bloque par un WAF).
+  via?: "direct" | "brightdata";
 }
