@@ -48,8 +48,8 @@ export function ScoreGauge({ score, size = 220 }: Props) {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
-            className="text-[72px] leading-none font-black tabular-nums"
-            style={{ color: color.stroke, letterSpacing: "-0.04em" }}
+            className="leading-none font-black tabular-nums"
+            style={{ color: color.stroke, letterSpacing: "-0.04em", fontSize: Math.round(size * 0.44) }}
           >
             {score}
           </span>

@@ -113,13 +113,13 @@ export function AuditApp() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="lg:grid lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:gap-10">
+      <div className="lg:grid lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-8">
         <div className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1">
           <p className="ds-eyebrow mb-2">GEO · Technique</p>
-          <h1 className="text-3xl sm:text-4xl lg:text-[30px] font-black leading-[1.05] tracking-[-0.035em] text-[color:var(--text)]">
+          <h1 className="text-2xl sm:text-3xl lg:text-[26px] font-black leading-[1.05] tracking-[-0.035em] text-[color:var(--text)]">
             Prêt pour les moteurs génératifs&nbsp;?
           </h1>
-          <p className="mt-3 text-sm text-[color:var(--text-secondary)] leading-snug">
+          <p className="mt-2.5 text-[13px] text-[color:var(--text-secondary)] leading-snug">
             Testez en 10 secondes si votre site est lisible par ChatGPT, Claude, Perplexity et Gemini.
           </p>
 
@@ -222,17 +222,12 @@ function ScorePanel({ result, scoreRef }: { result: AuditResult; scoreRef: React
           href={result.normalizedUrl}
           target="_blank"
           rel="noopener"
-          className="text-lg sm:text-xl lg:text-[22px] font-black leading-tight tracking-[-0.03em] break-all text-[color:var(--text)] hover:text-[color:var(--accent)]"
+          className="text-base sm:text-lg lg:text-[19px] font-black leading-tight tracking-[-0.03em] break-all text-[color:var(--text)] hover:text-[color:var(--accent)]"
         >
           {displayUrl}
         </a>
-        {result.siteTypeLabel && (
-          <p className="text-[10px] uppercase tracking-[0.14em] mt-1 font-[family-name:var(--font-mono)] text-[color:var(--text-muted)]">
-            {result.siteTypeLabel}
-          </p>
-        )}
       </div>
-      <ScoreGauge score={result.score} size={160} />
+      <ScoreGauge score={result.score} size={140} />
       <p className="text-[10px] font-[family-name:var(--font-mono)] text-[color:var(--text-muted)] uppercase tracking-wider">
         {(result.durationMs / 1000).toFixed(1)}s · {result.checks.filter((c) => c.status !== "skip").length} contrôles
       </p>
@@ -257,7 +252,7 @@ function DetailPanel({ result }: { result: AuditResult }) {
     <div className="flex flex-col gap-3">
       <div className="mb-2">
         <p className="ds-eyebrow">Détail</p>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-[-0.03em] mt-1 text-[color:var(--text)]">
+        <h2 className="text-xl sm:text-2xl font-black tracking-[-0.03em] mt-1 text-[color:var(--text)]">
           Le diagnostic, étape par étape
         </h2>
       </div>
@@ -281,7 +276,7 @@ function WhatWeCheck() {
   return (
     <section>
       <p className="ds-eyebrow mb-2">Sommaire</p>
-      <h2 className="text-2xl sm:text-3xl font-black tracking-[-0.03em] mb-6 text-[color:var(--text)]">
+      <h2 className="text-xl sm:text-2xl font-black tracking-[-0.03em] mb-5 text-[color:var(--text)]">
         Ce que GEOshaker contrôle
       </h2>
       <div className="flex flex-col">

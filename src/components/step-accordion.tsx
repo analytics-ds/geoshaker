@@ -23,17 +23,17 @@ export function StepAccordion({ step, defaultOpen = false }: { step: StepSummary
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-4 px-4 sm:px-5 py-4 text-left min-h-[64px] active:bg-[color:var(--bg-warm)] hover:bg-[color:var(--bg-card-tint)] transition-colors"
+        className="w-full flex items-center gap-3 px-3.5 sm:px-4 py-3 text-left min-h-[56px] active:bg-[color:var(--bg-warm)] hover:bg-[color:var(--bg-card-tint)] transition-colors"
         aria-expanded={open}
       >
         <span
-          className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-[8px] text-[color:var(--accent)] font-[family-name:var(--font-mono)] font-semibold text-sm tracking-wider"
+          className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-[8px] text-[color:var(--accent)] font-[family-name:var(--font-mono)] font-semibold text-xs tracking-wider"
           style={{ background: "var(--accent-soft)" }}
         >
           {String(step.step).padStart(2, "0")}
         </span>
         <span className="flex-1 min-w-0">
-          <span className="block text-[15px] sm:text-base font-bold text-[color:var(--text)]">
+          <span className="block text-sm sm:text-[15px] font-bold text-[color:var(--text)]">
             {step.title}
           </span>
           <span className="flex items-center gap-2 mt-1">
@@ -61,11 +61,11 @@ export function StepAccordion({ step, defaultOpen = false }: { step: StepSummary
       {open && (
         <div className="border-t border-[color:var(--border-default)] divide-y divide-[color:var(--border-default)]">
           {step.checks.map((c) => (
-            <div key={c.id} className="px-4 sm:px-5 py-4 flex gap-3">
+            <div key={c.id} className="px-3.5 sm:px-4 py-3.5 flex gap-3">
               <CheckIcon status={c.status} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[15px] font-semibold text-[color:var(--text)]">
+                  <span className="text-sm font-semibold text-[color:var(--text)]">
                     {c.label}
                   </span>
                   <PriorityTag priority={c.priority} />
