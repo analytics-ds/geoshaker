@@ -23,8 +23,19 @@ export function rootOrigin(url: string): string {
   return `${u.protocol}//${u.host}`;
 }
 
-function shouldRetry(status?: number): boolean {
+// Codes ou un autre User-Agent peut passer : on poursuit la cascade d'UA.
+function shouldRetryUa(status?: number): boolean {
   return status === 403 || status === 401 || status === 429 || status === 503;
+}
+
+// Codes qui justifient le fallback Bright Data : blocages WAF (401/403/429) et
+// erreurs edge Cloudflare (52x, dont le 525 same-account). Une IP residentielle
+// externe contourne ces deux familles. On exclut 404 / autres 4xx / 5xx serveur
+// classiques (5xx hors 52x) ou aucun proxy n'aiderait.
+function shouldFallback(status?: number): boolean {
+  if (status === undefined) return false;
+  if (status === 401 || status === 403 || status === 429) return true;
+  return status >= 520 && status <= 530; // 520-526, 530 : erreurs edge Cloudflare
 }
 
 async function singleFetch(
@@ -142,31 +153,35 @@ export async function fetchText(
   let last: FetchOutcome | null = null;
   for (const ua of cascade) {
     const res = await singleFetch(url, ua, method, timeout);
-    // Succes franc : on rend, sauf si le corps est en realite un challenge
-    // anti-bot (page "Just a moment...", DataDome...) qu'on peut debloquer.
-    if (res.ok && !(method === "GET" && res.body && looksLikeChallengePage(res.body))) {
-      return res;
-    }
-    // Erreur non liee a un blocage (404, 5xx, reseau) : inutile d'insister.
-    if (!res.ok && !shouldRetry(res.status)) {
+    const challenge = method === "GET" && !!res.body && looksLikeChallengePage(res.body);
+    // Succes franc (et pas un challenge anti-bot deguise en 200) : on rend.
+    if (res.ok && !challenge) {
       return res;
     }
     last = res;
+    // Challenge servi en 200, ou code non recuperable par un autre UA
+    // (404, 5xx, 52x, reseau) : inutile d'essayer les UA suivants.
+    if (challenge || !shouldRetryUa(res.status)) {
+      break;
+    }
   }
 
-  // Cascade epuisee sur un blocage (403/401/429) ou un challenge : fallback
-  // Bright Data Web Unlocker (IP residentielle FR). Reservee au GET.
-  if (method === "GET") {
-    const body = await brightDataFetch(url, { timeoutMs: timeout * 2 });
-    if (body) {
-      return {
-        ok: true,
-        status: 200,
-        url,
-        body,
-        contentType: "text/html",
-        via: "brightdata",
-      };
+  // Fallback Bright Data Web Unlocker (IP residentielle FR), reserve au GET.
+  // Declenche sur blocage WAF / erreur edge CF, ou sur un challenge anti-bot.
+  if (method === "GET" && last) {
+    const challengeLast = !!last.body && looksLikeChallengePage(last.body);
+    if (challengeLast || shouldFallback(last.status)) {
+      const body = await brightDataFetch(url, { timeoutMs: timeout * 2 });
+      if (body) {
+        return {
+          ok: true,
+          status: 200,
+          url,
+          body,
+          contentType: "text/html",
+          via: "brightdata",
+        };
+      }
     }
   }
 
