@@ -102,23 +102,24 @@ function hostVariant(url: string): string | null {
 }
 
 /**
- * Recupere la home en tolerant les domaines apex sans HTTPS.
- * Beaucoup de sites ne servent le certificat que sur www. et ne redirigent
- * l apex qu en HTTP. Si https://apex echoue au niveau reseau/TLS (aucun
- * status HTTP en retour), on retente la variante www. puis http:// avant
- * d abandonner. Un 4xx/5xx est en revanche conserve (l hote est joignable).
+ * Recupere la home en tolerant les variantes d'hote.
+ * Beaucoup de sites ne vivent que sur www (ou que sur l'apex), ou ne servent le
+ * certificat que sur l'une des deux formes (l'autre renvoie 525/TLS/redirect).
+ * Si l'URL saisie echoue (reseau, TLS, 5xx/52x, WAF non debloque), on tente
+ * automatiquement la variante d'hote (www <-> apex), puis http://, avant
+ * d'abandonner. On ne renvoie l'echec d'origine que si aucune variante ne marche.
  */
 export async function fetchHome(
   url: string,
   opts?: { timeoutMs?: number }
 ): Promise<FetchOutcome> {
   const first = await fetchText(url, opts);
-  if (first.status) return first;
+  if (first.ok) return first;
 
   const variant = hostVariant(url);
   if (variant) {
     const second = await fetchText(variant, opts);
-    if (second.status) return second;
+    if (second.ok) return second;
   }
 
   try {
@@ -126,7 +127,7 @@ export async function fetchHome(
     if (httpUrl.protocol === "https:") {
       httpUrl.protocol = "http:";
       const third = await fetchText(httpUrl.toString(), opts);
-      if (third.status) return third;
+      if (third.ok) return third;
     }
   } catch {
     // ignore
