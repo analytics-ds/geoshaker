@@ -30,6 +30,7 @@ function skipDetail(pageKind: PageSpec["pageKind"], siteType: SiteType): string 
   if (pageKind === "product") {
     if (siteType === "blog") return "Ce site semble être un blog : pas de page produit à tester. Contrôle non applicable.";
     if (siteType === "vitrine") return "Ce site est une vitrine : pas de page produit à tester. Contrôle non applicable.";
+    if (siteType === "leadgen") return "Ce site génère des contacts (comparateur, devis…) : il n’a pas de fiche produit à tester. Contrôle non applicable.";
     return "Aucune page produit détectée automatiquement. Ajoutez un lien vers une page produit depuis votre navigation pour activer ce contrôle.";
   }
   if (pageKind === "about") {

@@ -136,6 +136,66 @@ export async function fetchHome(
   return first;
 }
 
+/**
+ * Mesure robuste du TTFB serveur : plusieurs GET successifs sur la meme URL.
+ *
+ * Un echantillon unique n'est pas fiable (rapport x3-x4 observe entre deux
+ * requetes consecutives sur le meme site). On effectue donc N+1 mesures :
+ *  - la 1re "rechauffe" la connexion (DNS + TCP + TLS) et est ecartee ;
+ *  - on renvoie la MEDIANE des N suivantes, stable et reproductible.
+ *
+ * C'est le temps de reponse serveur vu depuis le datacenter du Worker, soit
+ * la perspective d'un crawler IA (pas celle d'un navigateur grand public).
+ * Renvoie null si la page n'est pas joignable proprement (on skippe alors le
+ * check plutot que d'afficher un chiffre invente).
+ */
+export async function measureTtfbMs(
+  url: string,
+  opts?: { samples?: number; timeoutMs?: number }
+): Promise<number | null> {
+  const samples = opts?.samples ?? 3; // mesures retenues (hors chauffe)
+  const timeoutMs = opts?.timeoutMs ?? DEFAULT_TIMEOUT;
+  const readings: number[] = [];
+
+  for (let i = 0; i <= samples; i++) {
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), timeoutMs);
+    const startedAt = performance.now();
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        redirect: "follow",
+        signal: ctrl.signal,
+        headers: {
+          "user-agent": CHROME_UA,
+          accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "accept-language": "fr-FR,fr;q=0.9,en;q=0.8",
+          "accept-encoding": "gzip, deflate, br",
+        },
+        cache: "no-store",
+      });
+      // fetch() resout des reception des en-tetes : on mesure ici (= TTFB).
+      const ms = Math.round(performance.now() - startedAt);
+      // On draine le corps pour garder la connexion reutilisable (chaude).
+      await res.arrayBuffer();
+      if (!res.ok) return null;
+      if (i > 0) readings.push(ms); // i === 0 : requete de chauffe, ecartee
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  if (readings.length === 0) return null;
+  readings.sort((a, b) => a - b);
+  const mid = Math.floor(readings.length / 2);
+  return readings.length % 2 === 1
+    ? readings[mid]
+    : Math.round((readings[mid - 1] + readings[mid]) / 2);
+}
+
 export async function fetchText(
   url: string,
   opts?: { timeoutMs?: number; method?: string; ua?: string }

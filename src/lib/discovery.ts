@@ -37,6 +37,20 @@ const ABOUT_PATTERNS = [
   /\/presentation/i,
 ];
 
+// Pages produit de DETAIL en priorite (un slug suit le mot-cle) : ce sont
+// elles qui portent le schema Product/Offer. On les prefere aux pages d'archive
+// (/boutique/, /shop/, /catalogue/) qui ne sont que des listes.
+const PRODUCT_DETAIL_PATTERNS = [
+  /\/produits?\/[^/]+/i,
+  /\/product\/[^/]+/i,
+  /\/products\/[^/]+/i,
+  /\/p\/[^/]+/i,
+  /\/boutique\/[^/]+/i,
+  /\/shop\/[^/]+/i,
+  /\/prestations?\/[^/]+/i,
+];
+
+// Fallback large (archives incluses) si aucune page de detail n'est trouvee.
 const PRODUCT_PATTERNS = [
   /\/produits?\//i,
   /\/product(\/|s\/)/i,
@@ -48,6 +62,13 @@ const PRODUCT_PATTERNS = [
   /\/catalogue\//i,
   /\/p\//i,
 ];
+
+// Produit : on cherche d'abord une page de detail (avec slug), sinon on
+// retombe sur les motifs larges. La validation finale (signaux Product/Offer
+// ou og:type=product) se fait cote audit.
+function findProduct(urls: string[]): string | undefined {
+  return findByPatterns(urls, PRODUCT_DETAIL_PATTERNS) ?? findByPatterns(urls, PRODUCT_PATTERNS);
+}
 
 // Paths communs a tester en direct (HEAD) si rien n est trouve dans la home
 const ABOUT_FALLBACK_PATHS = [
@@ -106,7 +127,7 @@ async function discoverFromSitemap(
     .filter((u) => u !== origin && u !== `${origin}/`);
   return {
     blog: findByPatterns(sameOrigin, BLOG_PATTERNS),
-    product: findByPatterns(sameOrigin, PRODUCT_PATTERNS),
+    product: findProduct(sameOrigin),
     about: findByPatterns(sameOrigin, ABOUT_PATTERNS),
   };
 }
@@ -122,7 +143,7 @@ export async function discoverTypedUrls(
 
   let blog = findByPatterns(links, BLOG_PATTERNS);
   let about = findByPatterns(links, ABOUT_PATTERNS);
-  let product = findByPatterns(links, PRODUCT_PATTERNS);
+  let product = findProduct(links);
 
   // Fallback 1 : sitemap
   if (!blog || !product || !about) {

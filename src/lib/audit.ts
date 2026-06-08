@@ -1,5 +1,5 @@
 import type { AuditResult, Check, SiteType, FetchOutcome } from "./types";
-import { fetchHome, normalizeUrl } from "./fetcher";
+import { fetchHome, measureTtfbMs, normalizeUrl } from "./fetcher";
 import { buildResult } from "./scoring";
 import { checkRobots } from "./checks/robots";
 import { checkRendering } from "./checks/rendering";
@@ -9,6 +9,20 @@ import { checkLlmsTxt } from "./checks/llmstxt";
 import { checkOnPage } from "./checks/onpage";
 import { checkInternational } from "./checks/international";
 import { checkServerHeaders } from "./checks/server";
+import { checkJsContentGap } from "./checks/jsrender";
+import { extractJsonLd, extractSchemaTypes } from "./checks/jsonld";
+import { brightDataConfigured, brightDataFetch } from "./brightdata";
+
+// Une page candidate "produit" en est-elle vraiment une ? On se fie aux signaux
+// portes par la page elle-meme : og:type=product (OpenGraph) ou un schema
+// JSON-LD Product/Offer. Plus robuste que le seul type de site (un e-commerce
+// riche en articles peut etre classe "blog", cf. whiskydegustation).
+function looksLikeProductPage(body?: string): boolean {
+  if (!body) return false;
+  if (/<meta[^>]+property=["']og:type["'][^>]+content=["']product["']/i.test(body)) return true;
+  const types = extractSchemaTypes(extractJsonLd(body));
+  return types.some((t) => t === "Product" || t === "Offer" || t === "AggregateOffer");
+}
 import { discoverTypedUrls, fetchMany } from "./discovery";
 import { detectSiteType, extractSitemapLocs } from "./site-type";
 
@@ -95,6 +109,15 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
   // Tous les checks suivants doivent partir de cette origine, pas de l URL saisie.
   const resolved = homeOutcome.url || normalized;
 
+  // Rendu JS de la home via Bright Data (navigateur reel, IP residentielle) :
+  // lance des maintenant pour masquer sa latence derriere le reste de l'audit.
+  // Sert a chiffrer le contenu visible uniquement apres execution JavaScript
+  // (check 2.5). Inutile si la home a deja ete recuperee via Bright Data.
+  const renderedHomePromise: Promise<string | null> =
+    homeOutcome.via !== "brightdata" && brightDataConfigured()
+      ? brightDataFetch(resolved, { timeoutMs: 20_000 })
+      : Promise.resolve(null);
+
   const [robots, sitemapLocs] = await Promise.all([
     checkRobots(resolved),
     extractSitemapLocs(resolved),
@@ -111,11 +134,23 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
     discoveredBlog: discovered.blog,
   });
 
-  const [blogOut, aboutOut, productOut] = await fetchMany([
+  const [blogOut, aboutOut, productOutRaw] = await fetchMany([
     discovered.blog,
     discovered.about,
     discovered.product,
   ]);
+
+  // Garde-fou contre les fausses pages produit : un motif d'URL (/services/,
+  // /offres/, /catalogue/, /p/...) ne suffit pas. On ne retient la page que si
+  // le site est e-commerce/service OU si la page porte de vrais signaux produit
+  // (og:type=product ou schema Product/Offer). Sinon on l'ecarte et les checks
+  // produit sont skippes (cas meilleur-transport : comparateur sans fiche
+  // produit ou /services/ etc. renvoient 404, aucun signal produit).
+  const trustProduct =
+    siteType === "ecommerce" ||
+    siteType === "service" ||
+    looksLikeProductPage(productOutRaw?.body);
+  const productOut: FetchOutcome | null = trustProduct ? productOutRaw : null;
 
   // Page "extra" pour JSON-LD (priorite : blog > about)
   const extraOutcome: FetchOutcome | null = blogOut ?? aboutOut;
@@ -152,7 +187,29 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
     siteType
   );
 
+  // Check 2.5 : contenu visible uniquement apres JavaScript (HTML brut vs rendu).
+  const renderedHomeBody = await renderedHomePromise;
+  renderingChecks.push(checkJsContentGap(homeOutcome, renderedHomeBody));
+
   const jsonLdChecks = checkJsonLd(homeOutcome, productOut, extraOutcome, siteType, extraPageKind);
+
+  // TTFB fiable : sonde dediee (mediane multi-echantillons) qui remplace la
+  // mesure incidente du fetch de contenu (un seul tir, trop bruite). On ne
+  // remesure que les pages joignables en direct : via Bright Data, le TTFB
+  // serveur reel n'est pas mesurable et ttfb.ts skippe deja le check.
+  async function applyRobustTtfb(outcome: FetchOutcome | null): Promise<void> {
+    if (!outcome || !outcome.ok || outcome.via === "brightdata") return;
+    const ms = await measureTtfbMs(outcome.url || resolved, {
+      samples: 3,
+      timeoutMs: 10_000,
+    });
+    if (ms !== null) outcome.ttfbMs = ms;
+  }
+  await Promise.all([
+    applyRobustTtfb(homeOutcome),
+    applyRobustTtfb(productOut),
+    applyRobustTtfb(blogOut),
+  ]);
 
   const ttfbChecks = checkTtfb(
     [

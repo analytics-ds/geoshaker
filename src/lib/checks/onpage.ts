@@ -36,7 +36,7 @@ function hasClickableToc(html: string): boolean {
   return targets.size >= 3;
 }
 
-function textContent(html: string): string {
+export function textContent(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -380,7 +380,7 @@ export async function checkOnPage(params: {
     label: "Minimum 300 mots de contenu éditorial",
     priority: "MOYENNE",
     status: status6h,
-    detail: `${words} mots sur la page d’accueil, ratio texte/code ${ratioPct} %.`,
+    detail: `${words} mots lisibles dans le HTML de la page d’accueil (texte lu sans exécuter JavaScript, soit la vue d’un crawler IA), ratio texte/code ${ratioPct} %.`,
     advice:
       status6h === "pass"
         ? undefined
