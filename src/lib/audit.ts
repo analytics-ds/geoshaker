@@ -9,9 +9,7 @@ import { checkLlmsTxt } from "./checks/llmstxt";
 import { checkOnPage } from "./checks/onpage";
 import { checkInternational } from "./checks/international";
 import { checkServerHeaders } from "./checks/server";
-import { checkJsContentGap } from "./checks/jsrender";
 import { extractJsonLd, extractSchemaTypes } from "./checks/jsonld";
-import { brightDataConfigured, brightDataFetch } from "./brightdata";
 
 // Une page candidate "produit" en est-elle vraiment une ? On se fie aux signaux
 // portes par la page elle-meme : og:type=product (OpenGraph) ou un schema
@@ -109,15 +107,6 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
   // Tous les checks suivants doivent partir de cette origine, pas de l URL saisie.
   const resolved = homeOutcome.url || normalized;
 
-  // Rendu JS de la home via Bright Data (navigateur reel, IP residentielle) :
-  // lance des maintenant pour masquer sa latence derriere le reste de l'audit.
-  // Sert a chiffrer le contenu visible uniquement apres execution JavaScript
-  // (check 2.5). Inutile si la home a deja ete recuperee via Bright Data.
-  const renderedHomePromise: Promise<string | null> =
-    homeOutcome.via !== "brightdata" && brightDataConfigured()
-      ? brightDataFetch(resolved, { timeoutMs: 20_000 })
-      : Promise.resolve(null);
-
   const [robots, sitemapLocs] = await Promise.all([
     checkRobots(resolved),
     extractSitemapLocs(resolved),
@@ -127,7 +116,7 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
   const discovered = await discoverTypedUrls(resolved, homeOutcome);
 
   // Detection du type de site
-  const siteType: SiteType = detectSiteType({
+  let siteType: SiteType = detectSiteType({
     homeBody: homeOutcome.body,
     sitemapLocs,
     discoveredProduct: discovered.product,
@@ -151,6 +140,18 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
     siteType === "service" ||
     looksLikeProductPage(productOutRaw?.body);
   const productOut: FetchOutcome | null = trustProduct ? productOutRaw : null;
+
+  // Correction du type de site : une vraie fiche produit (signaux Product/Offer
+  // ou og:type=product) prime sur une classification "blog"/"vitrine" induite
+  // par un gros volume editorial. Cas e-commerce riche en articles classe a tort
+  // "blog" (ex. whiskydegustation : 80 produits mais 123 articles).
+  if (
+    productOut &&
+    (siteType === "blog" || siteType === "vitrine") &&
+    looksLikeProductPage(productOut.body)
+  ) {
+    siteType = "ecommerce";
+  }
 
   // Page "extra" pour JSON-LD (priorite : blog > about)
   const extraOutcome: FetchOutcome | null = blogOut ?? aboutOut;
@@ -186,10 +187,6 @@ export async function runAudit(rawUrl: string): Promise<AuditResult> {
     ],
     siteType
   );
-
-  // Check 2.5 : contenu visible uniquement apres JavaScript (HTML brut vs rendu).
-  const renderedHomeBody = await renderedHomePromise;
-  renderingChecks.push(checkJsContentGap(homeOutcome, renderedHomeBody));
 
   const jsonLdChecks = checkJsonLd(homeOutcome, productOut, extraOutcome, siteType, extraPageKind);
 
